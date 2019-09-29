@@ -45,6 +45,8 @@ double Simpson(double a, double b) {
 }
 
 int main(int argc, char const *argv[]) {
+	double start, startCrit,endCrit, end;
+	GET_TIME(start);
 	if (argc != 4) {
 		printf("Uso: ./sequencial <comeco> <fim> <erro>\n");
 		return 1;
@@ -53,16 +55,23 @@ int main(int argc, char const *argv[]) {
 	a = atof(argv[1]); b = atof(argv[2]); erro = atof(argv[3]);
 	double c = (a + b)/2.0;
 	double result = EfectiveSimpson(a,b);
-	double criteria = Simpson(a,c) + Simpson(c,b) - result;
+	double criteria = EfectiveSimpson(a,c) + EfectiveSimpson(c,b) - result;
 	if (criteria < 0) { criteria *= -1; }
+	GET_TIME(startCrit);
 	while (!(criteria < erro*15)) {
 		n *= 2;
-		criteria = EfectiveSimpson(a,c) + EfectiveSimpson(c,b) - result;
 		result = EfectiveSimpson(a,b);
+		criteria = EfectiveSimpson(a,c) + EfectiveSimpson(c,b) - result;
 		if (criteria < 0) { criteria *= -1; }
 		printf("%lf < %lf\n", criteria ,erro*15);
 	}
-	printf("%lf vs %lf\n",Simpson(a,b),result);
-	printf("%lf < %lf\n", criteria ,erro*15);
+	GET_TIME(endCrit); GET_TIME(end);
+	printf("Resultado da integral: %lf\n", result);
+	printf("Subintervalos: %lf\n", n);
+	printf("Tempo de execução: %lf s\n", end - start);
+
+	double amdahl = (startCrit - start) + (endCrit - end) + (endCrit - startCrit)/4;
+	printf("Com %d threads, poderia ter sido feito em %lf s, com %lf de ganho!\n",
+ 		4, amdahl,(end - start)/amdahl );
 	return 0;
 }
