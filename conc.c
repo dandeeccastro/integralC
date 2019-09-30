@@ -10,15 +10,16 @@
 double n = 2;
 double a, b, erro;
 pthread_mutex_t mutex;
+int checkIfFinished = 0;
 
 double Function(double x) {
-	return 1 + x;
+	//return 1 + x;
 	//return sqrt(1 + x*x);
 	//return sqrt(1 + pow(x,4));
 	//return sin(pow(x,2));
 	// return cos(pow(M_E,-x));
 	// return cos(pow(M_E,-x))*x;
-	//return cos(pow(M_E,-x))*(0.005*pow(x,3) + 1);
+	return cos(pow(M_E,-x))*(0.005*pow(x,3) + 1);
 }
 
 double EfectiveSimpson(double in, double end, double nDouble){
@@ -35,7 +36,7 @@ double EfectiveSimpson(double in, double end, double nDouble){
 		} else if (i%2) {
 			coef = 4.;
 		} else { coef = 2.;}
-
+		if (checkIfFinished) return 1000;
 		//printf("coef = %lf; xi = %lf no passo %d\n",coef,in + i*deltaX,i+1 );
 		result += coef * Function(in + i*deltaX);
 	}
@@ -55,7 +56,7 @@ void *t() {
 	double criteria = EfectiveSimpson(a,c,localN) + EfectiveSimpson(c,b,localN) - localResult;
 	if (criteria < 0) { criteria *= -1; }
 
-	while (!(criteria < erro*15)) {
+	while (!(criteria < erro*15) && !checkIfFinished) {
 		localResult = EfectiveSimpson(a,b,localN);
 		criteria = EfectiveSimpson(a,c,localN) + EfectiveSimpson(c,b,localN) - localResult;
 		if (criteria < 0) { criteria *= -1; }
@@ -66,7 +67,11 @@ void *t() {
 		n *= 2;
 		pthread_mutex_unlock(&mutex);
 	}
-	printf("Deu %lf pra mim! Tchau!\n", localResult);
+	if (!checkIfFinished){
+		checkIfFinished = 1;
+	} else {
+		pthread_exit(NULL);
+	} printf("Deu %lf pra mim! Tchau!\n", localResult);
 	pthread_exit(NULL);
 }
 
@@ -103,8 +108,6 @@ int main(int argc, char const *argv[]) {
 	printf("Tempo de execução: %lf s\n", end - start);
 
 	// Análise de tempo
-	double amdahl = (startCrit - start) + (endCrit - end) + (endCrit - startCrit)/4;
-	printf("Com %d threads, poderia ter sido feito em %lf s, com %lf de ganho!\n",
- 		4, amdahl,(end - start)/amdahl );
+	printf("Rodei com %lf s, e %lf s deles eram concorrentes! \n", (end - start), (endCrit - startCrit) );
 	return 0;
 }
