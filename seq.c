@@ -56,7 +56,7 @@ int main(int argc, char const *argv[]) {
 	double c = (a + b)/2.0;
 	double result = EfectiveSimpson(a,b);
 	double h = (b - a)/localN;
-	double criteria = - (pow(h,4)/180) * (b - a) * Function(c);
+	double criteria = - (pow(h,4)/180) * (b - a) * pow(Function(c),4);
 	if (criteria < 0) { criteria *= -1; }
 	GET_TIME(startCrit);
 	while (!(criteria < erro*15)) {

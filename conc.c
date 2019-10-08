@@ -54,7 +54,7 @@ void *t() {
 	double c = (a + b)/2.0;
 	double localResult = EfectiveSimpson(a,b,localN);
 	double h = (b - a)/localN;
-	double criteria = - (pow(h,4)/180) * (b - a) * Function(c);
+	double criteria = - (pow(h,4)/180) * (b - a) * pow(Function(c),4);
 	if (criteria < 0) { criteria *= -1; }
 
 	while (!(criteria < erro*15) && !checkIfFinished) {
