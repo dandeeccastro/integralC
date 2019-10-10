@@ -2,16 +2,56 @@
 #include <math.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <stdbool.h>
 #include "timer.h"
 
-#define NTHREADS 4
-
-/* Variáveis Globais e Compartilhadas */
+/* Variáveis Globais e Compartilhadas referentes ao lock com calculus */
 double n = 2;
 double a, b, erro;
-pthread_mutex_t mutex;
-int checkIfFinished = 0;
+int NTHREADS;
+double result;
 
+/* Variáveis Globais e Compartilhadas referentes ao lock com check */
+int threadCount = 0;
+bool hasFinished = false;
+
+/* Variáveis para sincronização */
+pthread_mutex_t calculus, check;
+pthread_cond_t cond;
+
+/*
+	Ferramenta de sincronização no estilo barreira, para fazer a verificação
+	do critério de avaliação. A ideia é: sou uma thread que entrou na função.
+	Se todas as threads ainda não estiverem aqui, eu espero elas com o Wait.
+	Se todas estiverem aqui, eu, antes de liberar elas, atualizo o hasFinished
+	com os dados necessários para a validação.
+
+	Note que somente um thread usa criteira e erro para validar hasFinished.
+	Isso funciona pois cada loop em t() pode dar um resultado correto, e se 
+	ele estiver correto no nível de precisão que foi executado, qualquer outro
+	que vier depois dele também será válido, pois naturalmente terá sido calculado
+	com critérios de maior precisão
+*/
+void WaitForCriteriaCheck(double criteria, double erro, double localResult) {
+	pthread_mutex_lock(&check);
+	bool localCheck = hasFinished;
+	if (threadCount < NTHREADS - 1) {
+		threadCount++;
+		pthread_cond_wait(&cond,&check);
+	} else {
+		threadCount = 0;
+		localCheck = (criteria < erro * 15);
+		if (localCheck) hasFinished = localCheck;
+		result = localResult;
+		pthread_cond_broadcast(&cond);
+	}
+	pthread_mutex_unlock(&check);
+}
+
+/*
+	A função cuja integral será calculada. Aqui você pode descomentar a 
+	função que deseja calcular a integral, salvar, compilar e executar à vontade!
+*/
 double Function(double x) {
 	//return 1 + x;
 	//return sqrt(1 + x*x);
@@ -22,10 +62,15 @@ double Function(double x) {
 	return cos(pow(M_E,-x))*(0.005*pow(x,3) + 1);
 }
 
+/*
+	Faz o cálculo da integral com base na Fórmula de Simpson para aproximações
+	e nos retorna o resultado final. Aqui que fica o loop mais pesado na execução
+	do código.
+*/
 double EfectiveSimpson(double in, double end, double nDouble){
 
 	int i; int nInt = nDouble;
-	double result = 0;
+	double resultado = 0;
 
 	double coef; // coeficiente da soma
 	double deltaX = (end - in)/nDouble;
@@ -36,59 +81,70 @@ double EfectiveSimpson(double in, double end, double nDouble){
 		} else if (i%2) {
 			coef = 4.;
 		} else { coef = 2.;}
-		if (checkIfFinished) return 1000;
 		//printf("coef = %lf; xi = %lf no passo %d\n",coef,in + i*deltaX,i+1 );
-		result += coef * Function(in + i*deltaX);
+		resultado += coef * Function(in + i*deltaX);
 	}
-	return result*(deltaX/3);
+	return resultado*(deltaX/3);
 
 }
 
+/*
+	Código executado pelas threads. Usa uma cópia local de n, assim como
+	outras variáveis de cálculo,  para fazer o processamento da integral
+
+	O loop principal consiste em atualizar o resultado local e o critério de
+	avaliação. Uma vez feitos esses cálculos, valido com a função
+	WaitForCriteriaCheck se o erro calculado é menor que o especificado pelo
+	usuário. Se for, a variável hasFinished é setada para true, e todas as
+	threads retorna. Senão, o loop continua
+*/
 void *t() {
 
 	// Pegando dados de variáveis globais uma vez! Mutex lock!
-	pthread_mutex_lock(&mutex);
+	pthread_mutex_lock(&calculus);
 	double localN = n; n *= 2;
-	pthread_mutex_unlock(&mutex);
+	pthread_mutex_unlock(&calculus);
 
+	// Calcula variáveis locais importantes para a execução da quadrática
 	double c = (a + b)/2.0;
 	double localResult = EfectiveSimpson(a,b,localN);
 	double h = (b - a)/localN;
 	double criteria = - (pow(h,4)/180) * (b - a) * pow(Function(c),4);
 	if (criteria < 0) { criteria *= -1; }
 
-	while (!(criteria < erro*15) && !checkIfFinished) {
+	// Loop baseado na checagem de erro e na condicional estabelecida
+	do {
 		localResult = EfectiveSimpson(a,b,localN);
 		criteria = EfectiveSimpson(a,c,localN) + EfectiveSimpson(c,b,localN) - localResult;
 		if (criteria < 0) { criteria *= -1; }
-		printf("%lf < %lf\n", criteria ,erro*15);
 
-		pthread_mutex_lock(&mutex);
+		pthread_mutex_lock(&calculus);
 		localN = n;
 		n *= 2;
-		pthread_mutex_unlock(&mutex);
-	}
-	if (!checkIfFinished){
-		checkIfFinished = 1;
-	} else {
-		pthread_exit(NULL);
-	} printf("Deu %lf pra mim! Tchau!\n", localResult);
+		pthread_mutex_unlock(&calculus);
+		WaitForCriteriaCheck(criteria, erro, localResult);
+	} while (!hasFinished);
 	pthread_exit(NULL);
 }
 
+/**
+*	Fluxo principal da aplicação, começa inicializando as variáveis necessárias
+*	e depois parte para o threading. No final, retorna o resultado da integral
+* 	no terminal e o tempo de execução
+*/
 int main(int argc, char const *argv[]) {
 
 	// Inicializa as variáveis necessárias e começa a contagem de tempo
 	double start, startCrit,endCrit, end;
 	pthread_t threads[NTHREADS];
-	pthread_mutex_init(&mutex,NULL);
+	pthread_mutex_init(&calculus,NULL);
 	GET_TIME(start);
 
-	// Lê input do terminal e valida, colocando na variável
-	if (argc != 4) {
-		printf("Uso: ./sequencial <comeco> <fim> <erro>\n");
+	// Lê input do terminal e valida, colocando nas respectivas variáveis
+	if (argc != 5) {
+		printf("Uso: ./sequencial <comeco> <fim> <erro> <numero de threads>\n");
 		return 1;
-	}	a = atof(argv[1]); b = atof(argv[2]); erro = atof(argv[3]);
+	}	a = atof(argv[1]); b = atof(argv[2]); erro = atof(argv[3]); NTHREADS = atoi(argv[4]);
 
 	// Cria os threads, espera eles terminarem e faz a contagem de tempo concorrente
 	GET_TIME(startCrit);
@@ -99,12 +155,14 @@ int main(int argc, char const *argv[]) {
 		}
 	}
 	for (i = 0; i < NTHREADS; i++) {
-		pthread_join(threads[i],NULL);
+		if(pthread_join(threads[i],NULL)){
+			printf("Erro no pthread_join!\n");
+		}
 	}
 	GET_TIME(endCrit); GET_TIME(end);
 
 	// Imprime o resultado final
-//	printf("Resultado da integral: %lf\n", result);
+	printf("Resultado: %lf\n", result );
 	printf("Subintervalos: %lf\n", n);
 	printf("Tempo de execução: %lf s\n", end - start);
 

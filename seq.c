@@ -14,6 +14,8 @@ double Function(double x) {
 }
 
 double n = 2;
+
+
 double EfectiveSimpson(double in, double end){
 	 // numero de subintervalos
 	int i; int nInt = n;
@@ -45,19 +47,22 @@ double Simpson(double a, double b) {
 }
 
 int main(int argc, char const *argv[]) {
+	
 	double start, startCrit,endCrit, end;
 	GET_TIME(start);
 	if (argc != 4) {
 		printf("Uso: ./sequencial <comeco> <fim> <erro>\n");
 		return 1;
 	}
+
 	double a, b, erro;
 	a = atof(argv[1]); b = atof(argv[2]); erro = atof(argv[3]);
 	double c = (a + b)/2.0;
 	double result = EfectiveSimpson(a,b);
-	double h = (b - a)/localN;
+	double h = (b - a)/n;
 	double criteria = - (pow(h,4)/180) * (b - a) * pow(Function(c),4);
 	if (criteria < 0) { criteria *= -1; }
+
 	GET_TIME(startCrit);
 	while (!(criteria < erro*15)) {
 		n *= 2;
@@ -67,6 +72,7 @@ int main(int argc, char const *argv[]) {
 		printf("%lf < %lf\n", criteria ,erro*15);
 	}
 	GET_TIME(endCrit); GET_TIME(end);
+	
 	printf("Resultado da integral: %lf\n", result);
 	printf("Subintervalos: %lf\n", n);
 	printf("Tempo de execução: %lf s\n", end - start);
