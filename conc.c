@@ -32,17 +32,18 @@ pthread_cond_t cond;
 	que vier depois dele também será válido, pois naturalmente terá sido calculado
 	com critérios de maior precisão
 */
-void WaitForCriteriaCheck(double criteria, double erro, double localResult) {
+void WaitForCriteriaCheck(bool criteriaCheck, double localResult) {
 	pthread_mutex_lock(&check);
-	bool localCheck = hasFinished;
-	if (threadCount < NTHREADS - 1) {
+	bool localCheck = criteriaCheck;
+	if (threadCount < NTHREADS - 1 && !criteriaCheck) {
 		threadCount++;
 		pthread_cond_wait(&cond,&check);
 	} else {
 		threadCount = 0;
-		localCheck = (criteria < erro * 15);
-		if (localCheck) hasFinished = localCheck;
-		result = localResult;
+		if (localCheck) {
+			hasFinished = localCheck;
+			result = localResult;
+		}
 		pthread_cond_broadcast(&cond);
 	}
 	pthread_mutex_unlock(&check);
@@ -106,23 +107,23 @@ void *t() {
 	pthread_mutex_unlock(&calculus);
 
 	// Calcula variáveis locais importantes para a execução da quadrática
-	double c = (a + b)/2.0;
-	double localResult = EfectiveSimpson(a,b,localN);
-	double h = (b - a)/localN;
-	double criteria = - (pow(h,4)/180) * (b - a) * pow(Function(c),4);
-	if (criteria < 0) { criteria *= -1; }
+	double localResult, c, criteria;
+	bool passedCriteriaCheck = false;
 
 	// Loop baseado na checagem de erro e na condicional estabelecida
 	do {
+		c = (b - a)/localN;
 		localResult = EfectiveSimpson(a,b,localN);
 		criteria = EfectiveSimpson(a,c,localN) + EfectiveSimpson(c,b,localN) - localResult;
 		if (criteria < 0) { criteria *= -1; }
+		printf("%lf < %lf", criteria, erro * 15);
+		passedCriteriaCheck = (criteria < erro * 15);
 
 		pthread_mutex_lock(&calculus);
 		localN = n;
 		n *= 2;
 		pthread_mutex_unlock(&calculus);
-		WaitForCriteriaCheck(criteria, erro, localResult);
+		WaitForCriteriaCheck(passedCriteriaCheck, localResult);
 	} while (!hasFinished);
 	pthread_exit(NULL);
 }
