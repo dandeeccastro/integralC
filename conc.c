@@ -24,8 +24,8 @@ pthread_cond_t cond;
 bool ImprovedCriteriaCheck(bool comparisonResult, double calculusResult){
 	pthread_mutex_lock(&check);
 	bool returnValue = false;
-	if (!hasFinished && threadCount < NTHREADS - 1){
-		threadCount++;
+	threadCount++;
+	if (!hasFinished && threadCount < NTHREADS ){
 		printf("Vou parar\n");
 		pthread_cond_wait(&cond,&check);
 	} else {
@@ -135,7 +135,7 @@ void *t() {
 	pthread_mutex_unlock(&calculus);
 
 	// Loop baseado na checagem de erro e na condicional estabelecida
-	do {
+	while (!hasFinished) {
 		c = (b - a)/(localN);
 		localResult = EfectiveSimpson(a,b,localN);
 		criteria = EfectiveSimpson(a,c,localN) + EfectiveSimpson(c,b,localN) - localResult;
@@ -147,7 +147,7 @@ void *t() {
 		n *= 2;
 		pthread_mutex_unlock(&calculus);
 		resultHolder = ImprovedCriteriaCheck((criteria < erro * 15), localResult);
-	} while (!hasFinished);
+	}
 	if (resultHolder) {
 		printf("Resultado: %lf\n",localResult);
 	}
