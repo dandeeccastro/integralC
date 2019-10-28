@@ -50,35 +50,35 @@ int main(int argc, char const *argv[]) {
 	
 	double start, startCrit,endCrit, end;
 	GET_TIME(start);
-	if (argc != 4) {
-		printf("Uso: ./sequencial <comeco> <fim> <erro>\n");
+	if (argc != 5) {
+		printf("Uso: ./sequencial <comeco> <fim> <erro> <numero de threads>\n");
 		return 1;
 	}
 
-	double a, b, erro;
-	a = atof(argv[1]); b = atof(argv[2]); erro = atof(argv[3]);
-	double c = (a + b)/2.0;
-	double result = EfectiveSimpson(a,b);
-	double h = (b - a)/n;
-	double criteria = - (pow(h,4)/180) * (b - a) * pow(Function(c),4);
-	if (criteria < 0) { criteria *= -1; }
+	double a, b, erro; 
+	int NTHREADS;
+
+	a = atof(argv[1]); b = atof(argv[2]); erro = atof(argv[3]); NTHREADS = atoi(argv[4]);
+	
+	double c, result, criteria;
 
 	GET_TIME(startCrit);
-	while (!(criteria < erro*15)) {
-		n *= 2;
+	do {
+		c = (b - a)/2.0;
 		result = EfectiveSimpson(a,b);
 		criteria = EfectiveSimpson(a,c) + EfectiveSimpson(c,b) - result;
 		if (criteria < 0) { criteria *= -1; }
-		printf("%lf < %lf\n", criteria ,erro*15);
-	}
+		printf("%lf < %lf | n = %lf\n", criteria ,erro*15, n);
+		n++;
+	} while (!(criteria < erro*15));
 	GET_TIME(endCrit); GET_TIME(end);
 	
 	printf("Resultado da integral: %lf\n", result);
 	printf("Subintervalos: %lf\n", n);
 	printf("Tempo de execução: %lf s\n", end - start);
 
-	double amdahl = (startCrit - start) + (endCrit - end) + (endCrit - startCrit)/4;
+	double amdahl = (startCrit - start) + (endCrit - end) + (endCrit - startCrit)/NTHREADS;
 	printf("Com %d threads, poderia ter sido feito em %lf s, com %lf de ganho!\n",
- 		4, amdahl,(end - start)/amdahl );
+ 		NTHREADS, amdahl,(end - start)/amdahl );
 	return 0;
 }

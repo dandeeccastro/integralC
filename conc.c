@@ -131,12 +131,12 @@ void *t() {
 	bool resultHolder = false;
 	// Pegando dados de variáveis globais uma vez! Mutex lock!
 	pthread_mutex_lock(&calculus);
-	localN = n; n *= 2;
+	localN = n; n++;
 	pthread_mutex_unlock(&calculus);
 
 	// Loop baseado na checagem de erro e na condicional estabelecida
 	while (!hasFinished) {
-		c = (b - a)/(localN);
+		c = (b - a)/2.0;
 		localResult = EfectiveSimpson(a,b,localN);
 		criteria = EfectiveSimpson(a,c,localN) + EfectiveSimpson(c,b,localN) - localResult;
 		if (criteria < 0) { criteria *= -1; }
@@ -144,7 +144,7 @@ void *t() {
 
 		pthread_mutex_lock(&calculus);
 		localN = n;
-		n *= 2;
+		n++;
 		pthread_mutex_unlock(&calculus);
 		resultHolder = ImprovedCriteriaCheck((criteria < erro * 15), localResult);
 	}
@@ -163,7 +163,6 @@ int main(int argc, char const *argv[]) {
 
 	// Inicializa as variáveis necessárias e começa a contagem de tempo
 	double start, startCrit,endCrit, end;
-	pthread_t threads[NTHREADS];
 	pthread_mutex_init(&calculus,NULL);
 	GET_TIME(start);
 
@@ -173,6 +172,7 @@ int main(int argc, char const *argv[]) {
 		return 1;
 	} a = atof(argv[1]); b = atof(argv[2]); erro = atof(argv[3]); NTHREADS = atoi(argv[4]);
 
+	pthread_t threads[NTHREADS];
 	// Cria os threads, espera eles terminarem e faz a contagem de tempo concorrente
 	GET_TIME(startCrit);
 	int i;
