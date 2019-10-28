@@ -14,11 +14,35 @@ double result;
 /* Variáveis Globais e Compartilhadas referentes ao lock com check */
 int threadCount = 0;
 bool hasFinished = false;
+bool uniqueHolder = false;
 
 /* Variáveis para sincronização */
 pthread_mutex_t calculus, check;
 pthread_cond_t cond;
 
+
+bool ImprovedCriteriaCheck(bool comparisonResult, double calculusResult){
+	pthread_mutex_lock(&check);
+	bool returnValue = false;
+	if (!hasFinished && threadCount < NTHREADS - 1){
+		threadCount++;
+		printf("Vou parar\n");
+		pthread_cond_wait(&cond,&check);
+	} else {
+		// Ou foi atualizado o hasFinished ou é a ultima thread a chegar na barreira
+		printf("Vou liberar\n");
+		threadCount = 0;
+		if (comparisonResult && !uniqueHolder) {
+			printf("Eu sou a resposta!!!\n");
+			hasFinished = comparisonResult;
+			uniqueHolder = true;
+			returnValue = true;
+		}
+		pthread_cond_broadcast(&cond);
+	}  
+	pthread_mutex_unlock(&check);
+	return returnValue;
+}
 /*
 	Ferramenta de sincronização no estilo barreira, para fazer a verificação
 	do critério de avaliação. A ideia é: sou uma thread que entrou na função.
@@ -35,10 +59,12 @@ pthread_cond_t cond;
 void WaitForCriteriaCheck(bool criteriaCheck, double localResult) {
 	pthread_mutex_lock(&check);
 	bool localCheck = criteriaCheck;
-	if (threadCount < NTHREADS - 1 && !criteriaCheck) {
+	if (threadCount < NTHREADS - 1) {
 		threadCount++;
+		printf("Estou esperando\n");
 		pthread_cond_wait(&cond,&check);
 	} else {
+		printf("Vou liberar\n");
 		threadCount = 0;
 		if (localCheck) {
 			hasFinished = localCheck;
@@ -57,10 +83,10 @@ double Function(double x) {
 	//return 1 + x;
 	//return sqrt(1 + x*x);
 	//return sqrt(1 + pow(x,4));
-	//return sin(pow(x,2));
+	return sin(pow(x,2));
 	// return cos(pow(M_E,-x));
 	// return cos(pow(M_E,-x))*x;
-	return cos(pow(M_E,-x))*(0.005*pow(x,3) + 1);
+	//return cos(pow(M_E,-x))*(0.005*pow(x,3) + 1);
 }
 
 /*
@@ -101,30 +127,30 @@ double EfectiveSimpson(double in, double end, double nDouble){
 */
 void *t() {
 
+	double localN, c, criteria, localResult;
+	bool resultHolder = false;
 	// Pegando dados de variáveis globais uma vez! Mutex lock!
 	pthread_mutex_lock(&calculus);
-	double localN = n; n *= 2;
+	localN = n; n *= 2;
 	pthread_mutex_unlock(&calculus);
-
-	// Calcula variáveis locais importantes para a execução da quadrática
-	double localResult, c, criteria;
-	bool passedCriteriaCheck = false;
 
 	// Loop baseado na checagem de erro e na condicional estabelecida
 	do {
-		c = (b - a)/localN;
+		c = (b - a)/(localN);
 		localResult = EfectiveSimpson(a,b,localN);
 		criteria = EfectiveSimpson(a,c,localN) + EfectiveSimpson(c,b,localN) - localResult;
 		if (criteria < 0) { criteria *= -1; }
-		printf("%lf < %lf", criteria, erro * 15);
-		passedCriteriaCheck = (criteria < erro * 15);
+		printf("%lf < %lf\n",criteria, erro  * 15);
 
 		pthread_mutex_lock(&calculus);
 		localN = n;
 		n *= 2;
 		pthread_mutex_unlock(&calculus);
-		WaitForCriteriaCheck(passedCriteriaCheck, localResult);
+		resultHolder = ImprovedCriteriaCheck((criteria < erro * 15), localResult);
 	} while (!hasFinished);
+	if (resultHolder) {
+		printf("Resultado: %lf\n",localResult);
+	}
 	pthread_exit(NULL);
 }
 
@@ -145,7 +171,7 @@ int main(int argc, char const *argv[]) {
 	if (argc != 5) {
 		printf("Uso: ./sequencial <comeco> <fim> <erro> <numero de threads>\n");
 		return 1;
-	}	a = atof(argv[1]); b = atof(argv[2]); erro = atof(argv[3]); NTHREADS = atoi(argv[4]);
+	} a = atof(argv[1]); b = atof(argv[2]); erro = atof(argv[3]); NTHREADS = atoi(argv[4]);
 
 	// Cria os threads, espera eles terminarem e faz a contagem de tempo concorrente
 	GET_TIME(startCrit);
@@ -163,7 +189,7 @@ int main(int argc, char const *argv[]) {
 	GET_TIME(endCrit); GET_TIME(end);
 
 	// Imprime o resultado final
-	printf("Resultado: %lf\n", result );
+	// printf("Resultado: %lf\n", result );
 	printf("Subintervalos: %lf\n", n);
 	printf("Tempo de execução: %lf s\n", end - start);
 
