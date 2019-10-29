@@ -20,20 +20,27 @@ bool uniqueHolder = false;
 pthread_mutex_t calculus, check;
 pthread_cond_t cond;
 
-
+/**
+ * Método de sincronização baseado em barreira, adaptado para a necessidade
+ * do problema.
+ * 
+ * A ideia é: recebo o resultado do critério de erro e o resultado do cálculo da integral.
+ * Caso a variável hasFinished, que define se o resultado foi encontrado, seja falsa ao mesmo
+ * tempo que essa não seja a última thread, ela se para e espera o broadcast.
+ * A última thread, se não tiver o resultado correto, libera todos para a próxima iteração.
+ * Mas se ela tiver o resultado, ela atualiza hasFinished e permite que ela printe o resultado
+ * na tela do terminal
+ **/
 bool ImprovedCriteriaCheck(bool comparisonResult, double calculusResult){
 	pthread_mutex_lock(&check);
 	bool returnValue = false;
 	threadCount++;
 	if (!hasFinished && threadCount < NTHREADS ){
-		printf("Vou parar\n");
 		pthread_cond_wait(&cond,&check);
 	} else {
 		// Ou foi atualizado o hasFinished ou é a ultima thread a chegar na barreira
-		printf("Vou liberar\n");
 		threadCount = 0;
 		if (comparisonResult && !uniqueHolder) {
-			printf("Eu sou a resposta!!!\n");
 			hasFinished = comparisonResult;
 			uniqueHolder = true;
 			returnValue = true;
@@ -42,37 +49,6 @@ bool ImprovedCriteriaCheck(bool comparisonResult, double calculusResult){
 	}  
 	pthread_mutex_unlock(&check);
 	return returnValue;
-}
-/*
-	Ferramenta de sincronização no estilo barreira, para fazer a verificação
-	do critério de avaliação. A ideia é: sou uma thread que entrou na função.
-	Se todas as threads ainda não estiverem aqui, eu espero elas com o Wait.
-	Se todas estiverem aqui, eu, antes de liberar elas, atualizo o hasFinished
-	com os dados necessários para a validação.
-
-	Note que somente um thread usa criteira e erro para validar hasFinished.
-	Isso funciona pois cada loop em t() pode dar um resultado correto, e se 
-	ele estiver correto no nível de precisão que foi executado, qualquer outro
-	que vier depois dele também será válido, pois naturalmente terá sido calculado
-	com critérios de maior precisão
-*/
-void WaitForCriteriaCheck(bool criteriaCheck, double localResult) {
-	pthread_mutex_lock(&check);
-	bool localCheck = criteriaCheck;
-	if (threadCount < NTHREADS - 1) {
-		threadCount++;
-		printf("Estou esperando\n");
-		pthread_cond_wait(&cond,&check);
-	} else {
-		printf("Vou liberar\n");
-		threadCount = 0;
-		if (localCheck) {
-			hasFinished = localCheck;
-			result = localResult;
-		}
-		pthread_cond_broadcast(&cond);
-	}
-	pthread_mutex_unlock(&check);
 }
 
 /*
@@ -108,7 +84,6 @@ double EfectiveSimpson(double in, double end, double nDouble){
 		} else if (i%2) {
 			coef = 4.;
 		} else { coef = 2.;}
-		//printf("coef = %lf; xi = %lf no passo %d\n",coef,in + i*deltaX,i+1 );
 		resultado += coef * Function(in + i*deltaX);
 	}
 	return resultado*(deltaX/3);
@@ -121,7 +96,7 @@ double EfectiveSimpson(double in, double end, double nDouble){
 
 	O loop principal consiste em atualizar o resultado local e o critério de
 	avaliação. Uma vez feitos esses cálculos, valido com a função
-	WaitForCriteriaCheck se o erro calculado é menor que o especificado pelo
+	ImprovedCriteriaCheck se o erro calculado é menor que o especificado pelo
 	usuário. Se for, a variável hasFinished é setada para true, e todas as
 	threads retorna. Senão, o loop continua
 */
@@ -135,19 +110,18 @@ void *t() {
 	pthread_mutex_unlock(&calculus);
 
 	// Loop baseado na checagem de erro e na condicional estabelecida
-	while (!hasFinished) {
+	do {
 		c = (b - a)/2.0;
 		localResult = EfectiveSimpson(a,b,localN);
 		criteria = EfectiveSimpson(a,c,localN) + EfectiveSimpson(c,b,localN) - localResult;
 		if (criteria < 0) { criteria *= -1; }
-		printf("%lf < %lf\n",criteria, erro  * 15);
 
 		pthread_mutex_lock(&calculus);
 		localN = n;
 		n++;
 		pthread_mutex_unlock(&calculus);
 		resultHolder = ImprovedCriteriaCheck((criteria < erro * 15), localResult);
-	}
+	} while (!hasFinished);
 	if (resultHolder) {
 		printf("Resultado: %lf\n",localResult);
 	}
@@ -189,8 +163,6 @@ int main(int argc, char const *argv[]) {
 	GET_TIME(endCrit); GET_TIME(end);
 
 	// Imprime o resultado final
-	// printf("Resultado: %lf\n", result );
-	printf("Subintervalos: %lf\n", n);
 	printf("Tempo de execução: %lf s\n", end - start);
 
 	// Análise de tempo

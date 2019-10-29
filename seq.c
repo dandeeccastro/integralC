@@ -3,6 +3,13 @@
 #include <stdlib.h>
 #include "timer.h"
 
+// Variável global
+double n = 2;
+
+/*
+	A função cuja integral será calculada. Aqui você pode descomentar a 
+	função que deseja calcular a integral, salvar, compilar e executar à vontade!
+*/
 double Function(double x) {
 	//return 1 + x;
 	//return sqrt(1 + x*x);
@@ -13,9 +20,11 @@ double Function(double x) {
 	return cos(pow(M_E,-x))*(0.005*pow(x,3) + 1);
 }
 
-double n = 2;
-
-
+/*
+	Faz o cálculo da integral com base na Fórmula de Simpson para aproximações
+	e nos retorna o resultado final. Aqui que fica o loop mais pesado na execução
+	do código.
+*/
 double EfectiveSimpson(double in, double end){
 	 // numero de subintervalos
 	int i; int nInt = n;
@@ -30,40 +39,43 @@ double EfectiveSimpson(double in, double end){
 		} else if (i%2) {
 			coef = 4.;
 		} else { coef = 2.;}
-
-		//printf("coef = %lf; xi = %lf no passo %d\n",coef,in + i*deltaX,i+1 );
 		result += coef * Function(in + i*deltaX);
 	}
 	return result*(deltaX/3);
 
 }
 
-double Simpson(double a, double b) {
-	double c, h3;
-	c = (a+b)/2.0;
-	h3 = (b-a)/6.0;
-	if (h3 < 0) { h3 *= -1; }
-	return h3 * (Function(a) + 4.0*Function(c) + Function(b));
-}
-
+/**
+ * Fluxo principal da aplicação. Por ser a versão sequencial, o principal do 
+ * cálculo matemático é feito nessa função. Aqui, avaliamos a área dos subespaços,
+ * vemos se ele está alinhado com nosso critério de avaliação e retornar
+ * o resultado
+ **/
 int main(int argc, char const *argv[]) {
 	
+	// Variáveis de contagem de tempo criadas, contagem iniciada
 	double start, startCrit,endCrit, end;
 	GET_TIME(start);
+
+	// Cria variáveis, corrige o input do usuário e passa o input dele
+	// para as variáveis
+	double a, b, erro; 
+	int NTHREADS;
+
 	if (argc != 5) {
 		printf("Uso: ./sequencial <comeco> <fim> <erro> <numero de threads>\n");
 		return 1;
 	}
-
-	double a, b, erro; 
-	int NTHREADS;
-
+	
 	a = atof(argv[1]); b = atof(argv[2]); erro = atof(argv[3]); NTHREADS = atoi(argv[4]);
 	
+	// Criamos as variáveis de cálculo, começamos a contagem do tempo e
+	// começamos o loop de cálculo da integral
 	double c, result, criteria;
-
 	GET_TIME(startCrit);
 	do {
+		// Calculo os valores e critérios. Se passaram, o loop para, 
+		// senão aumentamos N e repetimos o cálculo
 		c = (b - a)/2.0;
 		result = EfectiveSimpson(a,b);
 		criteria = EfectiveSimpson(a,c) + EfectiveSimpson(c,b) - result;
@@ -72,11 +84,13 @@ int main(int argc, char const *argv[]) {
 		n++;
 	} while (!(criteria < erro*15));
 	GET_TIME(endCrit); GET_TIME(end);
-	
+
+
+	// Imprimimos os resultados
 	printf("Resultado da integral: %lf\n", result);
-	printf("Subintervalos: %lf\n", n);
 	printf("Tempo de execução: %lf s\n", end - start);
 
+	// Análise do tempo do cálculo
 	double amdahl = (startCrit - start) + (endCrit - end) + (endCrit - startCrit)/NTHREADS;
 	printf("Com %d threads, poderia ter sido feito em %lf s, com %lf de ganho!\n",
  		NTHREADS, amdahl,(end - start)/amdahl );
