@@ -1,0 +1,151 @@
+Testador automático das integrais
+Concorrente
+Resultado: 103.806227
+Tempo de execução: 0.000354 s
+Rodei com 0.000354 s, e 0.000347 s deles eram concorrentes! 
+-------------
+Sequencial
+Resultado da integral: 104.819846
+Tempo de execução: 0.000008 s
+Com 4 threads, poderia ter sido feito em 0.000007 s, com 1.096774 de ganho!
+------------
+Concorrente
+Resultado: 103.806227
+Tempo de execução: 0.000291 s
+Rodei com 0.000291 s, e 0.000285 s deles eram concorrentes! 
+-------------
+Sequencial
+Resultado da integral: 104.819846
+Tempo de execução: 0.000007 s
+Com 4 threads, poderia ter sido feito em 0.000007 s, com 1.000000 de ganho!
+------------
+Concorrente
+Resultado: 103.806227
+Tempo de execução: 0.000303 s
+Rodei com 0.000303 s, e 0.000296 s deles eram concorrentes! 
+-------------
+Sequencial
+Resultado da integral: 104.819846
+Tempo de execução: 0.000012 s
+Com 4 threads, poderia ter sido feito em 0.000010 s, com 1.190476 de ganho!
+------------
+Concorrente
+Resultado: 103.806227
+Tempo de execução: 0.000309 s
+Rodei com 0.000309 s, e 0.000299 s deles eram concorrentes! 
+-------------
+Sequencial
+Resultado da integral: 104.819846
+Tempo de execução: 0.000012 s
+Com 4 threads, poderia ter sido feito em 0.000011 s, com 1.063830 de ganho!
+------------
+Concorrente
+Resultado: 103.806227
+Tempo de execução: 0.000254 s
+Rodei com 0.000254 s, e 0.000248 s deles eram concorrentes! 
+-------------
+Sequencial
+Resultado da integral: 104.819846
+Tempo de execução: 0.000011 s
+Com 4 threads, poderia ter sido feito em 0.000010 s, com 1.069767 de ganho!
+------------
+Concorrente
+Resultado: 103.806227
+Tempo de execução: 0.000257 s
+Rodei com 0.000257 s, e 0.000250 s deles eram concorrentes! 
+-------------
+Sequencial
+Resultado da integral: 104.819846
+Tempo de execução: 0.000009 s
+Com 4 threads, poderia ter sido feito em 0.000009 s, com 1.000000 de ganho!
+------------
+Concorrente
+Resultado: 103.806227
+Tempo de execução: 0.000302 s
+Rodei com 0.000302 s, e 0.000295 s deles eram concorrentes! 
+-------------
+Sequencial
+Resultado da integral: 104.819846
+Tempo de execução: 0.000008 s
+Com 4 threads, poderia ter sido feito em 0.000007 s, com 1.123967 de ganho!
+------------
+Concorrente
+Resultado: 103.806227
+Tempo de execução: 0.000365 s
+Rodei com 0.000365 s, e 0.000359 s deles eram concorrentes! 
+-------------
+Sequencial
+Resultado da integral: 104.819846
+Tempo de execução: 0.000008 s
+Com 4 threads, poderia ter sido feito em 0.000007 s, com 1.100000 de ganho!
+------------
+Concorrente
+Resultado: 103.806227
+Tempo de execução: 0.000297 s
+Rodei com 0.000297 s, e 0.000290 s deles eram concorrentes! 
+-------------
+Sequencial
+Resultado da integral: 104.819846
+Tempo de execução: 0.000007 s
+Com 4 threads, poderia ter sido feito em 0.000007 s, com 1.000000 de ganho!
+------------
+Concorrente
+Resultado: 103.806227
+Tempo de execução: 0.000300 s
+Rodei com 0.000300 s, e 0.000294 s deles eram concorrentes! 
+-------------
+Sequencial
+Resultado da integral: 104.819846
+Tempo de execução: 0.000010 s
+Com 4 threads, poderia ter sido feito em 0.000009 s, com 1.076923 de ganho!
+------------
+Concorrente
+Resultado: 1000022.909816
+Tempo de execução: 0.000604 s
+Rodei com 0.000604 s, e 0.000569 s deles eram concorrentes! 
+-------------
+Sequencial
+Resultado da integral: 1000034.202156
+Tempo de execução: 0.000028 s
+Com 4 threads, poderia ter sido feito em 0.000011 s, com 2.437500 de ganho!
+------------
+Concorrente
+Resultado: 1000011.387563
+Tempo de execução: 0.000927 s
+Rodei com 0.000927 s, e 0.000921 s deles eram concorrentes! 
+-------------
+Sequencial
+Resultado da integral: 1000034.202156
+Tempo de execução: 0.000028 s
+Com 4 threads, poderia ter sido feito em 0.000012 s, com 2.269231 de ganho!
+------------
+Concorrente
+Resultado: 1000034.202156
+Tempo de execução: 0.000377 s
+Rodei com 0.000377 s, e 0.000369 s deles eram concorrentes! 
+-------------
+Sequencial
+Resultado da integral: 1000034.202156
+Tempo de execução: 0.000028 s
+Com 4 threads, poderia ter sido feito em 0.000011 s, com 2.437500 de ganho!
+------------
+Concorrente
+Resultado: 1000031.763880
+Tempo de execução: 0.000496 s
+Rodei com 0.000496 s, e 0.000490 s deles eram concorrentes! 
+-------------
+Sequencial
+Resultado da integral: 1000034.202156
+Tempo de execução: 0.000028 s
+Com 4 threads, poderia ter sido feito em 0.000011 s, com 2.437500 de ganho!
+------------
+Concorrente
+Resultado: 1000034.202156
+Tempo de execução: 0.000414 s
+Rodei com 0.000414 s, e 0.000408 s deles eram concorrentes! 
+-------------
+Sequencial
+Resultado da integral: 1000034.202156
+Tempo de execução: 0.000027 s
+Com 4 threads, poderia ter sido feito em 0.000011 s, com 2.375000 de ganho!
+------------

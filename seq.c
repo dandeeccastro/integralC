@@ -11,13 +11,13 @@ double n = 2;
 	função que deseja calcular a integral, salvar, compilar e executar à vontade!
 */
 double Function(double x) {
-	//return 1 + x;
+	return 1 + x;
 	//return sqrt(1 + x*x);
 	//return sqrt(1 + pow(x,4));
 	//return sin(pow(x,2));
-	// return cos(pow(M_E,-x));
-	// return cos(pow(M_E,-x))*x;
-	return cos(pow(M_E,-x))*(0.005*pow(x,3) + 1);
+	//return cos(pow(M_E,-x));
+	//return cos(pow(M_E,-x))*x;
+	//return cos(pow(M_E,-x))*(0.005*pow(x,3) + 1);
 }
 
 /*
@@ -76,11 +76,11 @@ int main(int argc, char const *argv[]) {
 	do {
 		// Calculo os valores e critérios. Se passaram, o loop para, 
 		// senão aumentamos N e repetimos o cálculo
-		c = (b - a)/2.0;
+		c = ((b - a)/2.0)+a ;
 		result = EfectiveSimpson(a,b);
 		criteria = EfectiveSimpson(a,c) + EfectiveSimpson(c,b) - result;
 		if (criteria < 0) { criteria *= -1; }
-		printf("%lf < %lf | n = %lf\n", criteria ,erro*15, n);
+		//printf("%lf < %lf | n = %lf\n", criteria ,erro*15, n);
 		n++;
 	} while (!(criteria < erro*15));
 	GET_TIME(endCrit); GET_TIME(end);

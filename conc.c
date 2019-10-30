@@ -56,12 +56,12 @@ bool ImprovedCriteriaCheck(bool comparisonResult, double calculusResult){
 	função que deseja calcular a integral, salvar, compilar e executar à vontade!
 */
 double Function(double x) {
-	//return 1 + x;
+	return 1 + x;
 	//return sqrt(1 + x*x);
 	//return sqrt(1 + pow(x,4));
-	return sin(pow(x,2));
-	// return cos(pow(M_E,-x));
-	// return cos(pow(M_E,-x))*x;
+	//return sin(pow(x,2));
+	//return cos(pow(M_E,-x));
+	//return cos(pow(M_E,-x))*x;
 	//return cos(pow(M_E,-x))*(0.005*pow(x,3) + 1);
 }
 
@@ -111,7 +111,7 @@ void *t() {
 
 	// Loop baseado na checagem de erro e na condicional estabelecida
 	do {
-		c = (b - a)/2.0;
+		c = ((b - a)/2.0)+a ;
 		localResult = EfectiveSimpson(a,b,localN);
 		criteria = EfectiveSimpson(a,c,localN) + EfectiveSimpson(c,b,localN) - localResult;
 		if (criteria < 0) { criteria *= -1; }
